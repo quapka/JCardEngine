@@ -52,4 +52,26 @@ public class SetPublicKeyTest implements SmartCardTest {
         assertSW(0x9000, response.getSW());
         assertArrayEquals(testPubKeyBytes, response.getData());
     }
+
+    @Test
+    public void testEcho() {
+        // setup
+        CardSimulator simulator = new CardSimulator();
+
+        AID appletAID = AIDUtil.create("F000000001");
+        simulator.installApplet(appletAID, SetPublicKeyApplet.class);
+
+        simulator.selectApplet(appletAID);
+
+        byte[] echoMessage = new byte[] {'e', 'c', 'h', 'o'};
+
+        // Send a test public key into the JavaCard
+        CommandAPDU commandAPDU = new CommandAPDU(0x00, 0x0a, 0x00, 0x00, echoMessage);
+        ResponseAPDU response = simulator.transmitCommand(commandAPDU);
+
+        // And expect the same public key in return
+        assertSW(0x9000, response.getSW());
+        assertArrayEquals(echoMessage, response.getData());
+    }
+
 }

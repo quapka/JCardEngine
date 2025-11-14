@@ -63,6 +63,10 @@ public class SetPublicKeyApplet extends Applet {
     private final static byte MAXIMUM_DATA_INS = (byte) 0x8;
 
     private final static byte SET_OIDC_PUBKEY = (byte) 0x9;
+    private final static byte ECHO = (byte) 0xa;
+
+    private static byte[] tmp = new byte[256];
+
     public static final short uncompressPubKeySize = 65;
     private ECPublicKey OIDC_PUBLIC_KEY = (ECPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_EC_FP_PUBLIC, KeyBuilder.LENGTH_EC_FP_256, false);
     private byte[] testPubKeyBytes = {
@@ -166,6 +170,9 @@ public class SetPublicKeyApplet extends Applet {
                 return;
             case SET_OIDC_PUBKEY:
                 setOIDCPublicKey(apdu);
+                break;
+            case ECHO:
+                echo(apdu);
                 break;
             default:
                 // We do not support any other INS values
@@ -304,6 +311,14 @@ public class SetPublicKeyApplet extends Applet {
     private void getOIDCPublicKey(APDU apdu) {
         short keySize = OIDC_PUBLIC_KEY.getW(apdu.getBuffer(), (short) 0);
         apdu.setOutgoingAndSend((short) 0, keySize);
+    }
+
+    private void echo(APDU apdu) {
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopyNonAtomic(buffer, (short) ISO7816.OFFSET_CDATA, tmp, (short) 0, (short) 4);
+
+        Util.arrayCopyNonAtomic(tmp, (short) 0, buffer, (short) 0, (short) 4);
+        apdu.setOutgoingAndSend((short) 0, (short) 4);
     }
 
     public static class SecP256r1 {
